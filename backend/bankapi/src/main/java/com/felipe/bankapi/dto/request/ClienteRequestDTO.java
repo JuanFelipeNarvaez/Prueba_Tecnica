@@ -2,10 +2,13 @@ package com.felipe.bankapi.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDate;
+
+import com.felipe.bankapi.entity.enums.TipoIdentificacion;
 
 @Getter
 @Setter
@@ -13,8 +16,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class ClienteRequestDTO {
-    @NotBlank(message = "El tipo de identificación es obligatorio")
-    private String tipoIdentificacion;
+    @NotNull(message = "El tipo de identificación es obligatorio")
+    private TipoIdentificacion tipoIdentificacion;
 
     @NotBlank(message = "El número de identificación es obligatorio")
     private String numeroIdentificacion;

@@ -5,6 +5,8 @@ import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.felipe.bankapi.entity.enums.TipoIdentificacion;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,7 +16,7 @@ public class ClienteResponseDTO {
 
     private Long id;
 
-    private String tipoIdentificacion;
+    private TipoIdentificacion tipoIdentificacion;
 
     private String numeroIdentificacion;
 

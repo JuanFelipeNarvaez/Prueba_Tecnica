@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import com.felipe.bankapi.entity.enums.TipoIdentificacion;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,8 +22,9 @@ public class Cliente {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String tipoIdentificacion;
+    private TipoIdentificacion tipoIdentificacion;
 
     @Column(nullable = false, unique = true)
     private String numeroIdentificacion;
