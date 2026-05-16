@@ -46,14 +46,6 @@
       </div>
     </div>
   </div>
-
-  <div class="row mt-5">
-    <div class="col-12">
-      <div class="alert alert-info" role="alert">
-        <strong>Información:</strong> Asegúrate de que el backend esté ejecutándose en http://localhost:8080
-      </div>
-    </div>
-  </div>
 </template>
 
 <script>

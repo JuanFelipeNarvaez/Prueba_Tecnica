@@ -42,7 +42,7 @@
 
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-3 mt-4">
-      <p class="mb-0">&copy; 2024 Bank Management System. All rights reserved.</p>
+      <p class="mb-0">&copy; 2026 Bank Management System. All rights reserved.</p>
     </footer>
   </div>
 </template>

@@ -17,7 +17,7 @@
             <option value="">Seleccionar tipo</option>
             <option value="CC">Cédula de Ciudadanía (CC)</option>
             <option value="CE">Cédula de Extranjería (CE)</option>
-            <option value="NIT">NIT</option>
+            <option value="TI">TI</option>
             <option value="PASAPORTE">Pasaporte</option>
           </select>
         </div>

@@ -15,13 +15,11 @@
 
 <script>
 import TransaccionForm from '@/components/TransaccionForm.vue'
-import TransaccionList from '@/components/TransaccionList.vue'
 
 export default {
   name: 'TransaccionesView',
   components: {
     TransaccionForm,
-    TransaccionList,
   },
   methods: {
     handleTransaccionCompletada() {
