@@ -77,7 +77,14 @@ public class CuentaServiceImpl implements CuentaService {
         Cuenta cuenta = cuentaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cuenta no encontrada"));
 
-        cuenta.setEstado(EstadoCuenta.valueOf(estado.toUpperCase()));
+        EstadoCuenta nuevoEstado = EstadoCuenta.valueOf(estado.toUpperCase());
+
+        if (nuevoEstado == EstadoCuenta.CANCELADA) {
+            throw new BadRequestException(
+                    "La cuenta no puede cambiarse manualmente a CANCELADA");
+        }
+
+        cuenta.setEstado(nuevoEstado);
 
         Cuenta cuentaActualizada = cuentaRepository.save(cuenta);
 
@@ -92,14 +99,14 @@ public class CuentaServiceImpl implements CuentaService {
 
         if (cuenta.getSaldo().compareTo(BigDecimal.ZERO) > 0) {
             throw new BadRequestException(
-                    "No se puede cancelar una cuenta con saldo mayor a 0"
-            );
+                    "No se puede cancelar una cuenta con saldo mayor a 0");
         }
 
         cuenta.setEstado(EstadoCuenta.CANCELADA);
 
         cuentaRepository.save(cuenta);
     }
+
     private CuentaResponseDTO mapToResponse(Cuenta cuenta) {
 
         return CuentaResponseDTO.builder()
