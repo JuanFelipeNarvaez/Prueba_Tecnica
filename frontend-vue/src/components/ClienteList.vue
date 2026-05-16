@@ -1,85 +1,150 @@
 <template>
-  <div class="bg-white rounded-lg shadow">
-    <div class="p-6 border-b border-gray-200">
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">
-        Clientes ({{ filteredClientes.length }})
-      </h2>
-      <input
-        v-model="searchTerm"
-        type="text"
-        placeholder="Buscar por nombre, apellido, email o identificación..."
-        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5>Lista de Clientes</h5>
+      <button class="btn btn-sm btn-success" @click="loadClientes">
+        <i class="bi bi-arrow-clockwise"></i> Actualizar
+      </button>
+    </div>
+    <div class="card-body">
+      <!-- Mensajes de estado -->
+      <AlertMessage
+        v-if="successMessage"
+        type="success"
+        :message="successMessage"
+        @close="successMessage = ''"
       />
+      <AlertMessage
+        v-if="errorMessage"
+        :type="errorType"
+        :message="errorMessage"
+        @close="errorMessage = ''"
+      />
+      <div v-if="loading" class="text-center">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+
+      <div v-else-if="clientes.length === 0" class="alert alert-info">
+        No hay clientes registrados
+      </div>
+
+      <div v-else class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre Completo</th>
+              <th>Identificación</th>
+              <th>Correo</th>
+              <th>Fecha Nacimiento</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="cliente in clientes" :key="cliente.id">
+              <td>{{ cliente.id }}</td>
+              <td>{{ cliente.primerNombre }} {{ cliente.segundoNombre }} {{ cliente.primerApellido }} {{ cliente.segundoApellido }}</td>
+              <td>{{ cliente.tipoIdentificacion }}: {{ cliente.numeroIdentificacion }}</td>
+              <td>{{ cliente.correoElectronico }}</td>
+              <td>{{ formatDate(cliente.fechaNacimiento) }}</td>
+              <td>
+                <button
+                  class="btn btn-sm btn-primary me-2"
+                  @click="editCliente(cliente.id)"
+                  title="Editar"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-danger"
+                  @click="deleteCliente(cliente.id)"
+                  title="Eliminar"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-
-    <LoadingSpinner v-if="isLoading" />
-
-    <ErrorAlert
-      v-else-if="error"
-      title="Error al cargar clientes"
-      :message="error.message"
-    />
-
-    <div v-else-if="filteredClientes.length === 0" class="p-6 text-center text-gray-500">
-      {{ searchTerm ? 'No se encontraron resultados' : 'No hay clientes registrados' }}
-    </div>
-
-    <ClienteTable
-      v-else
-      :clientes="filteredClientes"
-      :is-deleting="isDeleting"
-      @edit="handleEdit"
-      @delete="handleDelete"
-    />
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useClientes, useDeleteCliente } from '@composables/useClienteQueries'
-import ClienteTable from './ClienteTable.vue'
-import LoadingSpinner from './LoadingSpinner.vue'
-import ErrorAlert from './ErrorAlert.vue'
-import type { Cliente } from '@types/cliente'
+<script>
+import { clienteService } from '@/services/clienteService'
+import { getErrorMessage, getErrorType } from '@/services/errorHelper'
+import { cuentaService } from '@/services/cuentaService'
+import AlertMessage from '@/components/AlertMessage.vue'
 
-const emit = defineEmits<{
-  edit: [cliente: Cliente]
-  delete: []
-  error: [message: string]
-}>()
-
-const { clientes, isLoading, error, fetch } = useClientes()
-const deleteCliente = useDeleteCliente()
-const searchTerm = ref('')
-
-const filteredClientes = computed(() => {
-  return clientes.value.filter(cliente =>
-    cliente.primerNombre.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    cliente.primerApellido.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    cliente.correoElectronico.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    cliente.numeroIdentificacion.includes(searchTerm.value)
-  )
-})
-
-const isDeleting = computed(() => deleteCliente.isLoading.value)
-
-const handleEdit = (cliente: Cliente) => {
-  emit('edit', cliente)
-}
-
-const handleDelete = async (id: number) => {
-  if (window.confirm('¿Estás seguro de que deseas eliminar este cliente?')) {
-    const success = await deleteCliente.mutate(id)
-    if (success) {
-      await fetch()
-      emit('delete')
-    } else {
-      emit('error', deleteCliente.error.value?.message || 'Error al eliminar')
+export default {
+  components: { AlertMessage },
+  name: 'ClienteList',
+  emits: ['edit-cliente'],
+  data() {
+    return {
+      clientes: [],
+      loading: false,
+      successMessage: '',
+      errorMessage: '',
+      errorType: 'danger',
     }
-  }
-}
+  },
+  mounted() {
+    this.loadClientes()
+  },
+  methods: {
+    async loadClientes() {
+      try {
+        this.loading = true
+        this.errorMessage = ''
+        const response = await clienteService.listarClientes()
+        this.clientes = response.data
+      } catch (error) {
+        this.errorMessage = getErrorMessage(error) || 'Error al cargar los clientes'
+        this.errorType = getErrorType(error)
+      } finally {
+        this.loading = false
+      }
+    },
+    editCliente(id) {
+      this.$emit('edit-cliente', id)
+    },
+    async deleteCliente(id) {
+      if (confirm('¿Estás seguro de que deseas eliminar este cliente?')) {
+          try {
+            this.errorMessage = ''
 
-onMounted(() => {
-  fetch()
-})
+            // Comprobar si el cliente tiene cuentas asociadas en el frontend
+            const cuentasResp = await cuentaService.listarCuentas()
+            const tieneCuentas = cuentasResp.data.some(c => c.clienteId === id)
+            if (tieneCuentas) {
+              this.errorMessage = 'No se puede eliminar el cliente: tiene cuentas asociadas'
+              this.errorType = 'warning'
+              return
+            }
+
+            await clienteService.eliminarCliente(id)
+            this.successMessage = 'Cliente eliminado correctamente'
+            this.loadClientes()
+          } catch (error) {
+            this.errorMessage = getErrorMessage(error) || 'Error al eliminar el cliente'
+            this.errorType = getErrorType(error)
+          }
+      }
+    },
+    formatDate(date) {
+      if (!date) return '-'
+      return new Date(date).toLocaleDateString('es-ES')
+    },
+  },
+}
 </script>
+
+<style scoped>
+.table-responsive {
+  overflow-x: auto;
+}
+</style>
